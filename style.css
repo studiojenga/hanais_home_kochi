@@ -93,7 +93,8 @@ body {
 }
 .site {
 	grid-column-start: main;
-	grid-row-start: head
+	grid-row-start: head;
+	justify-self: center;
 }
 
 .menu {
