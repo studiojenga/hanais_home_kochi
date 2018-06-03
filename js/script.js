@@ -66,6 +66,7 @@ window.onload = function(){
 
     const obNames = [
 					 'outer',
+					 'ground',
 					 
 					 'camera',
 					 'camera_origin'
