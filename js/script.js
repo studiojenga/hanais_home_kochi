@@ -66,6 +66,8 @@ window.onload = function(){
 
     const obNames = [
 					 'outer',
+					 'inner_3rd',
+					 //'wood',
 					 'ground',
 					 
 					 'camera',
@@ -150,6 +152,7 @@ window.onload = function(){
 			HUDUpdate();
 			
 			gl.enable(gl.DEPTH_TEST);
+			gl.enable(gl.CULL_FACE);
 			
 			cameraUpdate();
 			
