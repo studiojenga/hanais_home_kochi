@@ -45,9 +45,9 @@
 			void main(void){
 				vec4 smpColor = texture2D(texture, vTextureCoord);
 				vec4 shdColor = texture2DProj(textureShade, vTexProjCoord);
-				// gl_FragColor = vec4(smpColor.rgb, smpColor.a * alpha);
-				float s = shadow * vShadow;
-				gl_FragColor = vec4(smpColor.rgb * (1.0 - shdColor.rgb * s), smpColor.a * alpha);
+				gl_FragColor = vec4(smpColor.rgb, smpColor.a * alpha);
+				//float s = shadow * vShadow;
+				//gl_FragColor = vec4(smpColor.rgb * (1.0 - shdColor.rgb * s), smpColor.a * alpha);
 			}
         </script>
 		<link href="https://fonts.googleapis.com/css?family=Paytone+One|Source+Sans+Pro|Pattaya|Lakki+Reddy:300,700,400,400" rel="stylesheet">

@@ -67,6 +67,7 @@ window.onload = function(){
     const obNames = [
 					 'outer',
 					 'inner_3rd',
+					 'window',
 					 //'wood',
 					 'ground',
 					 
@@ -153,6 +154,8 @@ window.onload = function(){
 			
 			gl.enable(gl.DEPTH_TEST);
 			gl.enable(gl.CULL_FACE);
+			gl.enable(gl.BLEND);
+			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 			
 			cameraUpdate();
 			
