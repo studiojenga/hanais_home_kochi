@@ -1,9 +1,11 @@
 
 window.onload = function(){
     // constant
-  
+	const numDrawMode = 3;
+	
     // variables
 	let FPS;
+	let drawMode = 0;//0: draw all, 1: omit window, 2: omit window and roof
 	let eText = document.getElementById('text');
 
 	console.log(navigator.userAgent);
@@ -67,6 +69,7 @@ window.onload = function(){
     const obNames = [
 					 'outer',
 					 'inner_3rd',
+					 'roof_01',
 					 'window',
 					 //'wood',
 					 'ground',
@@ -129,6 +132,15 @@ window.onload = function(){
 		actions[acNames[i][0]] = readActionData(acNames[i]);
 	}
 	
+	let supportTouch = 'ontouchend' in document;
+	if (supportTouch) {
+		//c.addEventListener('touchstart', mouseDown, false);
+		c.addEventListener('touchend', mouseUp, false);
+	} else {
+		//c.addEventListener('mousedown', mouseDown, false);
+		c.addEventListener('mouseup', mouseUp, false);
+	}
+	
 	render();
 	
     function render(){
@@ -145,6 +157,8 @@ window.onload = function(){
 
         if (allDataReady === true) {
 			// 全てのリソースのロードが完了している
+			
+			drawUpdate();
 
             // objects の更新
             actionUpdate();
@@ -180,6 +194,23 @@ window.onload = function(){
 
         gl.flush();
     }
+	
+	function drawUpdate() {
+		switch (drawMode) {
+			case 0:
+				objects['window'].draw = true;
+				objects['roof_01'].draw = true;
+				break;
+			case 1:
+				objects['window'].draw = false;
+				break;
+			case 2:
+				objects['roof_01'].draw = false;
+				break;
+			default:
+				return;
+		}
+	}
 
     // camera update
     function cameraUpdate(){
@@ -867,6 +898,11 @@ window.onload = function(){
 	}
 	
 	function HUDUpdate(){
+	}
+	
+	function mouseUp(e) {
+		drawMode += 1;
+		drawMode %= numDrawMode;
 	}
 
 };
