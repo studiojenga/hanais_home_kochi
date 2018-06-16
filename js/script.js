@@ -7,6 +7,14 @@ window.onload = function(){
 	let FPS;
 	let drawMode = 0;//0: draw all, 1: omit window, 2: omit window and roof
 	let eText = document.getElementById('text');
+	
+	let mousePressed = false;
+	let prevMouseLocation;
+	let currentMouseLocation;
+	
+	let cameraVertAngle = 0.0;
+	const cameraVertAngleMax = 10.0 * Math.PI / 180.0;
+	const cameraVertAngleMin = -70.0 * Math.PI / 180.0;
 
 	console.log(navigator.userAgent);
 	let browser;
@@ -123,7 +131,7 @@ window.onload = function(){
 	}
 	
 	const acNames = [//object name, speed, phase shift
-			   ['camera_origin', 0.02]
+			   //['camera_origin', 0.02]
 			   ];
 	
 	const actions = new Array();
@@ -134,10 +142,12 @@ window.onload = function(){
 	
 	let supportTouch = 'ontouchend' in document;
 	if (supportTouch) {
-		//c.addEventListener('touchstart', mouseDown, false);
+		c.addEventListener('touchstart', mouseDown, false);
+		c.addEventListener('touchmove', mouseMove, false);
 		c.addEventListener('touchend', mouseUp, false);
 	} else {
-		//c.addEventListener('mousedown', mouseDown, false);
+		c.addEventListener('mousedown', mouseDown, false);
+		c.addEventListener('mousemove', mouseMove, false);
 		c.addEventListener('mouseup', mouseUp, false);
 	}
 	
@@ -159,6 +169,8 @@ window.onload = function(){
 			// 全てのリソースのロードが完了している
 			
 			drawUpdate();
+			
+			mouseUpdate();
 
             // objects の更新
             actionUpdate();
@@ -195,6 +207,25 @@ window.onload = function(){
         gl.flush();
     }
 	
+	function mouseUpdate() {
+		if (mousePressed) {
+			let deltaX = currentMouseLocation.x - prevMouseLocation.x;
+			let deltaY = currentMouseLocation.y - prevMouseLocation.y;
+			//eText.textContent = [deltaX, deltaY];
+			m.rotate(objects['camera_origin'].mMatrix0, -0.01 * deltaX, [0, 0, 1], objects['camera_origin'].mMatrix0);
+			
+			let deltaRotY = -0.01 * deltaY;
+			if (cameraVertAngle + deltaRotY < cameraVertAngleMax && cameraVertAngle + deltaRotY > cameraVertAngleMin) {
+				let rMatrix = m.identity(m.create());
+				m.rotate(rMatrix, deltaRotY, [1, 0, 0], rMatrix);
+				m.multiply(rMatrix, objects['camera'].mMatrix0, objects['camera'].mMatrix0);
+				cameraVertAngle += deltaRotY;
+			}
+			
+			prevMouseLocation = currentMouseLocation;
+		}
+	}
+	
 	function drawUpdate() {
 		switch (drawMode) {
 			case 0:
@@ -222,10 +253,9 @@ window.onload = function(){
     function actionUpdate(){
         // 全てのリソースを処理する
         for (var i = 0 in objects) {
-			//eText.textContent = i;
-            // アクションの更新
+			// アクションの更新
             if (i in actions && actions[i].objectAction.play != 0) {
-				eText.textContent = i;
+				//eText.textContent = i;
                 objects[i].mMatrix0 = evaluateAction(actions[i].objectAction, actions[i].objectAction.animation_count, objects[i].location, objects[i].rotation, objects[i].scale);
 				
 				actionIncrement(actions[i].objectAction);
@@ -900,9 +930,34 @@ window.onload = function(){
 	function HUDUpdate(){
 	}
 	
+	function mouseDown(e) {
+		mousePressed = true;
+		prevMouseLocation = getMouseLocation(e);
+	}
+	
+	function mouseMove(e) {
+		currentMouseLocation = getMouseLocation(e);
+	}
+	
 	function mouseUp(e) {
+		mousePressed = false;
 		drawMode += 1;
 		drawMode %= numDrawMode;
+	}
+	
+	function getMouseLocation(e) {
+		const mouseLocation = {}
+		
+		let rect = e.target.getBoundingClientRect();
+		
+		if (e.changedTouches) {
+			mouseLocation.x = e.changedTouches[0].clientX - rect.left;
+			mouseLocation.y = e.changedTouches[0].clientY - rect.top;
+		} else {
+			mouseLocation.x = e.clientX - rect.left;
+			mouseLocation.y = e.clientY - rect.top;
+		}
+		return mouseLocation;
 	}
 
 };
