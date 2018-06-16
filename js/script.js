@@ -140,6 +140,8 @@ window.onload = function(){
 		actions[acNames[i][0]] = readActionData(acNames[i]);
 	}
 	
+	window.addEventListener('keyup', keyUp, false);
+	
 	let supportTouch = 'ontouchend' in document;
 	if (supportTouch) {
 		c.addEventListener('touchstart', mouseDown, false);
@@ -942,8 +944,15 @@ window.onload = function(){
 	
 	function mouseUp(e) {
 		mousePressed = false;
-		drawMode += 1;
-		drawMode %= numDrawMode;
+		//drawMode += 1;
+		//drawMode %= numDrawMode;
+	}
+	
+	function keyUp(e) {
+		if (e.keyCode === 87) {//w key
+			drawMode += 1;
+			drawMode %= numDrawMode;
+		}
 	}
 	
 	function getMouseLocation(e) {
