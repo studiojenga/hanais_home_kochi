@@ -933,6 +933,7 @@ window.onload = function(){
 	function mouseDown(e) {
 		mousePressed = true;
 		prevMouseLocation = getMouseLocation(e);
+		currentMouseLocation = prevMouseLocation;
 	}
 	
 	function mouseMove(e) {
