@@ -214,9 +214,9 @@ window.onload = function(){
 			let deltaX = currentMouseLocation.x - prevMouseLocation.x;
 			let deltaY = currentMouseLocation.y - prevMouseLocation.y;
 			//eText.textContent = [deltaX, deltaY];
-			m.rotate(objects['camera_origin'].mMatrix0, -0.01 * deltaX, [0, 0, 1], objects['camera_origin'].mMatrix0);
+			m.rotate(objects['camera_origin'].mMatrix0, -0.005 * deltaX, [0, 0, 1], objects['camera_origin'].mMatrix0);
 			
-			let deltaRotY = -0.01 * deltaY;
+			let deltaRotY = -0.005 * deltaY;
 			if (cameraVertAngle + deltaRotY < cameraVertAngleMax && cameraVertAngle + deltaRotY > cameraVertAngleMin) {
 				let rMatrix = m.identity(m.create());
 				m.rotate(rMatrix, deltaRotY, [1, 0, 0], rMatrix);
@@ -940,6 +940,9 @@ window.onload = function(){
 	
 	function mouseMove(e) {
 		currentMouseLocation = getMouseLocation(e);
+		if (supportTouch) {
+			e.preventDefault();
+		}
 	}
 	
 	function mouseUp(e) {
