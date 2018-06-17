@@ -936,7 +936,7 @@ window.onload = function(){
 		mousePressed = true;
 		prevMouseLocation = getMouseLocation(e);
 		currentMouseLocation = prevMouseLocation;
-		if (prevMouseLocation.x > c.width * 0.95 && prevMouseLocation.y > c.height * 0.95) {
+		if (prevMouseLocation.x > c.width * 0.9 && prevMouseLocation.y > c.height * 0.9) {
 			drawMode += 1;
 			drawMode %= numDrawMode;
 		}
