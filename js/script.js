@@ -1,7 +1,7 @@
 
 window.onload = function(){
     // constant
-	const numDrawMode = 3;
+	const numDrawMode = 4;
 	
     // variables
 	let FPS;
@@ -76,6 +76,9 @@ window.onload = function(){
 
     const obNames = [
 					 'outer',
+					 'outer_03',
+					 'inner_1st',
+					 'inner_2nd',
 					 'inner_3rd',
 					 'roof_01',
 					 'window',
@@ -233,12 +236,18 @@ window.onload = function(){
 			case 0:
 				objects['window'].draw = true;
 				objects['roof_01'].draw = true;
+				objects['outer_03'].draw = true;
+				objects['inner_3rd'].draw = true;
 				break;
 			case 1:
 				objects['window'].draw = false;
 				break;
 			case 2:
 				objects['roof_01'].draw = false;
+				break;
+			case 3:
+				objects['outer_03'].draw = false;
+				objects['inner_3rd'].draw = false;
 				break;
 			default:
 				return;
