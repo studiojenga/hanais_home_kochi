@@ -260,7 +260,7 @@ window.onload = function(){
 				let prevDist = Math.sqrt((pt1.x - pt0.x) * (pt1.x - pt0.x) + (pt1.y - pt0.y) * (pt1.y - pt0.y));
 				
 				let ay = objects[obCamera[camMode]].angle_y;
-				ay += 0.00002 * (currentDist - prevDist);
+				ay -= 0.0002 * (currentDist - prevDist);
 				if (ay < 0.8 && ay > 0.4) {
 					objects[obCamera[camMode]].angle_y = ay;
 				}
@@ -1037,6 +1037,7 @@ window.onload = function(){
 				drawMode %= numDrawMode;
 			}
 		}
+		e.preventDefault();
 	}
 	
 	function touchMove(e) {
@@ -1047,6 +1048,7 @@ window.onload = function(){
 	
 	function touchEnd(e) {
 		touched = false;
+		e.preventDefault();
 	}
 	
 	function keyUp(e) {
