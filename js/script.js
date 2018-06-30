@@ -154,6 +154,7 @@ window.onload = function(){
 		c.addEventListener('mousedown', mouseDown, false);
 		c.addEventListener('mousemove', mouseMove, false);
 		c.addEventListener('mouseup', mouseUp, false);
+		c.addEventListener('wheel', wheel, false);
 	}
 	
 	render();
@@ -256,8 +257,14 @@ window.onload = function(){
 
     // camera update
     function cameraUpdate(){
-		m.inverse(objects[obCamera[camMode]].mMatrix, vMatrix);
-        m.multiply(objects[obCamera[camMode]].pMatrix, vMatrix, vpMatrix);
+		let _obCamera = objects[obCamera[camMode]];
+		switch (_obCamera.camera_type) {// 0: PERSP, 1: ORTHO
+			case 0: //PERSP
+				m.perspective(_obCamera.angle_y / 1.0 * 180.0 / Math.PI, c.width / c.height, _obCamera.clip_start, _obCamera.clip_end, _obCamera.pMatrix);
+				break;
+		}
+		m.inverse(_obCamera.mMatrix, vMatrix);
+        m.multiply(_obCamera.pMatrix, vMatrix, vpMatrix);
     }
 
     // action update
@@ -961,6 +968,14 @@ window.onload = function(){
 	function mouseUp(e) {
 		mousePressed = false;
 		
+	}
+	
+	function wheel(e) {
+		let ay = objects[obCamera[camMode]].angle_y;
+		ay += 0.00002 * e.deltaY;
+		if (ay < 0.8 && ay > 0.4) {
+			objects[obCamera[camMode]].angle_y = ay;
+		}
 	}
 	
 	function keyUp(e) {
