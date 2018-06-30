@@ -264,6 +264,7 @@ window.onload = function(){
 				if (ay < 0.8 && ay > 0.4) {
 					objects[obCamera[camMode]].angle_y = ay;
 				}
+				prevTouchLocations = currentTouchLocations;
 			}
 		}
 	}
