@@ -229,7 +229,9 @@ window.onload = function(){
 		if (mousePressed) {
 			let deltaX = currentMouseLocation.x - prevMouseLocation.x;
 			let deltaY = currentMouseLocation.y - prevMouseLocation.y;
+			cameraInteractionUpdate(deltaX, deltaY);
 			//eText.textContent = [deltaX, deltaY];
+			/*
 			m.rotate(objects['camera_origin'].mMatrix0, -0.005 * deltaX, [0, 0, 1], objects['camera_origin'].mMatrix0);
 			
 			let deltaRotY = -0.005 * deltaY;
@@ -239,7 +241,7 @@ window.onload = function(){
 				m.multiply(rMatrix, objects['camera'].mMatrix0, objects['camera'].mMatrix0);
 				cameraVertAngle += deltaRotY;
 			}
-			
+			*/
 			prevMouseLocation = currentMouseLocation;
 		}
 	}
@@ -260,7 +262,7 @@ window.onload = function(){
 				let prevDist = Math.sqrt((pt1.x - pt0.x) * (pt1.x - pt0.x) + (pt1.y - pt0.y) * (pt1.y - pt0.y));
 				
 				let ay = objects[obCamera[camMode]].angle_y;
-				ay -= 0.0002 * (currentDist - prevDist);
+				ay -= 0.001 * (currentDist - prevDist);
 				if (ay < 0.8 && ay > 0.4) {
 					objects[obCamera[camMode]].angle_y = ay;
 				}
@@ -1009,9 +1011,9 @@ window.onload = function(){
 	
 	function mouseMove(e) {
 		currentMouseLocation = getMouseLocation(e);
-		if (supportTouch) {
-			e.preventDefault();
-		}
+		//if (supportTouch) {
+			//e.preventDefault();
+		//}
 	}
 	
 	function mouseUp(e) {
@@ -1021,7 +1023,7 @@ window.onload = function(){
 	
 	function wheel(e) {
 		let ay = objects[obCamera[camMode]].angle_y;
-		ay += 0.00002 * e.deltaY;
+		ay += 0.00005 * e.deltaY;
 		if (ay < 0.8 && ay > 0.4) {
 			objects[obCamera[camMode]].angle_y = ay;
 		}
@@ -1062,7 +1064,7 @@ window.onload = function(){
 		const mouseLocation = {};
 		
 		let rect = e.target.getBoundingClientRect();
-		
+		/*
 		if (e.changedTouches) {
 			mouseLocation.x = e.changedTouches[0].clientX - rect.left;
 			mouseLocation.y = e.changedTouches[0].clientY - rect.top;
@@ -1070,6 +1072,9 @@ window.onload = function(){
 			mouseLocation.x = e.clientX - rect.left;
 			mouseLocation.y = e.clientY - rect.top;
 		}
+		*/
+		mouseLocation.x = e.clientX - rect.left;
+		mouseLocation.y = e.clientY - rect.top;
 		return mouseLocation;
 	}
 	
