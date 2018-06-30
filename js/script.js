@@ -1075,10 +1075,8 @@ window.onload = function(){
 		const touchLocations = [];
 		
 		let rect = e.target.getBoundingClientRect();
-		for (var i = 0; i < e.changedTouches.length; i++) {
+		for (var i = 0; i < e.touches.length; i++) {
 			const touchLocation = {};
-			//touchLocation.x = e.changedTouches[i].clientX - rect.left;
-			//touchLocation.y = e.changedTouches[i].clientY - rect.top;
 			touchLocation.x = e.touches[i].clientX - rect.left;
 			touchLocation.y = e.touches[i].clientY - rect.top;
 			touchLocations.push(touchLocation);
