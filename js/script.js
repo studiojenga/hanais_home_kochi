@@ -1040,6 +1040,7 @@ window.onload = function(){
 	
 	function touchMove(e) {
 		currentTouchLocations = getTouchLocations(e);
+		eText.textContent = currentTouchLocations.length;
 		e.preventDefault();
 	}
 	
