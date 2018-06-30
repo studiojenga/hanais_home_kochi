@@ -151,9 +151,6 @@ window.onload = function(){
 	
 	let supportTouch = 'ontouchend' in document;
 	if (supportTouch) {
-		//c.addEventListener('touchstart', mouseDown, false);
-		//c.addEventListener('touchmove', mouseMove, false);
-		//c.addEventListener('touchend', mouseUp, false);
 		c.addEventListener('touchstart', touchStart, false);
 		c.addEventListener('touchmove', touchMove, false);
 		c.addEventListener('touchend', touchEnd, false);
@@ -230,30 +227,19 @@ window.onload = function(){
 			let deltaX = currentMouseLocation.x - prevMouseLocation.x;
 			let deltaY = currentMouseLocation.y - prevMouseLocation.y;
 			cameraInteractionUpdate(deltaX, deltaY);
-			//eText.textContent = [deltaX, deltaY];
-			/*
-			m.rotate(objects['camera_origin'].mMatrix0, -0.005 * deltaX, [0, 0, 1], objects['camera_origin'].mMatrix0);
 			
-			let deltaRotY = -0.005 * deltaY;
-			if (cameraVertAngle + deltaRotY < cameraVertAngleMax && cameraVertAngle + deltaRotY > cameraVertAngleMin) {
-				let rMatrix = m.identity(m.create());
-				m.rotate(rMatrix, deltaRotY, [1, 0, 0], rMatrix);
-				m.multiply(rMatrix, objects['camera'].mMatrix0, objects['camera'].mMatrix0);
-				cameraVertAngle += deltaRotY;
-			}
-			*/
 			prevMouseLocation = currentMouseLocation;
 		}
 	}
 	
 	function touchUpdate() {
 		if (touched) {
-			if (currentTouchLocations.length === 1) {
+			if (currentTouchLocations.length === 1) {//rotation
 				let deltaX = currentTouchLocations[0].x - prevTouchLocations[0].x;
 				let deltaY = currentTouchLocations[0].y - prevTouchLocations[0].y;
 				cameraInteractionUpdate(deltaX, deltaY);
 				prevTouchLocations = currentTouchLocations;
-			} else if (currentTouchLocations.length === 2) {
+			} else if (currentTouchLocations.length === 2) {//zoom up
 				let ct0 = currentTouchLocations[0];
 				let ct1 = currentTouchLocations[1];
 				let currentDist = Math.sqrt((ct1.x - ct0.x) * (ct1.x - ct0.x) + (ct1.y - ct0.y) * (ct1.y - ct0.y));
@@ -263,7 +249,7 @@ window.onload = function(){
 				
 				let ay = objects[obCamera[camMode]].angle_y;
 				ay -= 0.001 * (currentDist - prevDist);
-				if (ay < 0.8 && ay > 0.4) {
+				if (ay < 0.8 && ay > 0.3) {
 					objects[obCamera[camMode]].angle_y = ay;
 				}
 				prevTouchLocations = currentTouchLocations;
@@ -1011,20 +997,16 @@ window.onload = function(){
 	
 	function mouseMove(e) {
 		currentMouseLocation = getMouseLocation(e);
-		//if (supportTouch) {
-			//e.preventDefault();
-		//}
 	}
 	
 	function mouseUp(e) {
 		mousePressed = false;
-		
 	}
 	
 	function wheel(e) {
 		let ay = objects[obCamera[camMode]].angle_y;
 		ay += 0.00005 * e.deltaY;
-		if (ay < 0.8 && ay > 0.4) {
+		if (ay < 0.8 && ay > 0.3) {
 			objects[obCamera[camMode]].angle_y = ay;
 		}
 	}
@@ -1064,15 +1046,7 @@ window.onload = function(){
 		const mouseLocation = {};
 		
 		let rect = e.target.getBoundingClientRect();
-		/*
-		if (e.changedTouches) {
-			mouseLocation.x = e.changedTouches[0].clientX - rect.left;
-			mouseLocation.y = e.changedTouches[0].clientY - rect.top;
-		} else {
-			mouseLocation.x = e.clientX - rect.left;
-			mouseLocation.y = e.clientY - rect.top;
-		}
-		*/
+		
 		mouseLocation.x = e.clientX - rect.left;
 		mouseLocation.y = e.clientY - rect.top;
 		return mouseLocation;
