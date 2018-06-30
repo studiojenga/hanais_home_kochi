@@ -12,6 +12,10 @@ window.onload = function(){
 	let prevMouseLocation;
 	let currentMouseLocation;
 	
+	let touched = false;
+	let prevTouchLocations;
+	let currentTouchLocations;
+	
 	let cameraVertAngle = 0.0;
 	const cameraVertAngleMax = 10.0 * Math.PI / 180.0;
 	const cameraVertAngleMin = -70.0 * Math.PI / 180.0;
@@ -147,9 +151,12 @@ window.onload = function(){
 	
 	let supportTouch = 'ontouchend' in document;
 	if (supportTouch) {
-		c.addEventListener('touchstart', mouseDown, false);
-		c.addEventListener('touchmove', mouseMove, false);
-		c.addEventListener('touchend', mouseUp, false);
+		//c.addEventListener('touchstart', mouseDown, false);
+		//c.addEventListener('touchmove', mouseMove, false);
+		//c.addEventListener('touchend', mouseUp, false);
+		c.addEventListener('touchstart', touchStart, false);
+		c.addEventListener('touchmove', touchMove, false);
+		c.addEventListener('touchend', touchEnd, false);
 	} else {
 		c.addEventListener('mousedown', mouseDown, false);
 		c.addEventListener('mousemove', mouseMove, false);
@@ -176,7 +183,12 @@ window.onload = function(){
 			
 			drawUpdate();
 			
-			mouseUpdate();
+			if (supportTouch) {
+				touchUpdate();
+			} else {
+				mouseUpdate();
+			}
+			//mouseUpdate();
 
             // objects の更新
             actionUpdate();
@@ -229,6 +241,42 @@ window.onload = function(){
 			}
 			
 			prevMouseLocation = currentMouseLocation;
+		}
+	}
+	
+	function touchUpdate() {
+		if (touched) {
+			if (currentTouchLocations.length === 1) {
+				let deltaX = currentTouchLocations[0].x - prevTouchLocations[0].x;
+				let deltaY = currentTouchLocations[0].y - prevTouchLocations[0].y;
+				cameraInteractionUpdate(deltaX, deltaY);
+				prevTouchLocations = currentTouchLocations;
+			} else if (currentTouchLocations.length === 2) {
+				let ct0 = currentTouchLocations[0];
+				let ct1 = currentTouchLocations[1];
+				let currentDist = Math.sqrt((ct1.x - ct0.x) * (ct1.x - ct0.x) + (ct1.y - ct0.y) * (ct1.y - ct0.y));
+				let pt0 = prevTouchLocations[0];
+				let pt1 = prevTouchLocations[1];
+				let prevDist = Math.sqrt((pt1.x - pt0.x) * (pt1.x - pt0.x) + (pt1.y - pt0.y) * (pt1.y - pt0.y));
+				
+				let ay = objects[obCamera[camMode]].angle_y;
+				ay += 0.00002 * prevDist;
+				if (ay < 0.8 && ay > 0.4) {
+					objects[obCamera[camMode]].angle_y = ay;
+				}
+			}
+		}
+	}
+	
+	function cameraInteractionUpdate(dX, dY) {
+		m.rotate(objects['camera_origin'].mMatrix0, -0.005 * dX, [0, 0, 1], objects['camera_origin'].mMatrix0);
+		
+		let deltaRotY = -0.005 * dY;
+		if (cameraVertAngle + deltaRotY < cameraVertAngleMax && cameraVertAngle + deltaRotY > cameraVertAngleMin) {
+			let rMatrix = m.identity(m.create());
+			m.rotate(rMatrix, deltaRotY, [1, 0, 0], rMatrix);
+			m.multiply(rMatrix, objects['camera'].mMatrix0, objects['camera'].mMatrix0);
+			cameraVertAngle += deltaRotY;
 		}
 	}
 	
@@ -978,6 +1026,27 @@ window.onload = function(){
 		}
 	}
 	
+	function touchStart(e) {
+		touched = true;
+		prevTouchLocations = getTouchLocations(e);
+		currentTouchLocations = prevTouchLocations;
+		if (prevTouchLocations.length === 1) {
+			if (prevTouchLocations[0].x > c.width * 0.9 && prevTouchLocations[0].y > c.height * 0.9) {
+				drawMode += 1;
+				drawMode %= numDrawMode;
+			}
+		}
+	}
+	
+	function touchMove(e) {
+		currentTouchLocations = getTouchLocations(e);
+		e.preventDefault();
+	}
+	
+	function touchEnd(e) {
+		touched = false;
+	}
+	
 	function keyUp(e) {
 		if (e.keyCode === 87) {//w key
 			drawMode += 1;
@@ -986,7 +1055,7 @@ window.onload = function(){
 	}
 	
 	function getMouseLocation(e) {
-		const mouseLocation = {}
+		const mouseLocation = {};
 		
 		let rect = e.target.getBoundingClientRect();
 		
@@ -998,6 +1067,19 @@ window.onload = function(){
 			mouseLocation.y = e.clientY - rect.top;
 		}
 		return mouseLocation;
+	}
+	
+	function getTouchLocations(e) {
+		const touchLocations = [];
+		
+		let rect = e.target.getBoundingClientRect();
+		for (var i = 0; i < e.changedTouches.length; i++) {
+			const touchLocation = {};
+			touchLocation.x = e.changedTouches[i].clientX - rect.left;
+			touchLocation.y = e.changedTouches[i].clientY - rect.top;
+			touchLocations.push(touchLocation);
+		}
+		return touchLocations;
 	}
 
 };
