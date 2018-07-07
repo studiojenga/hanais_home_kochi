@@ -1,7 +1,7 @@
 
 window.onload = function(){
     // constant
-	const numDrawMode = 4;
+	const numDrawMode = 5;
 	
     // variables
 	let FPS;
@@ -137,15 +137,42 @@ window.onload = function(){
 		readObjectData(objects[i].name);
 	}
 	
-	const acNames = [//object name, speed, phase shift
-			   //['camera_origin', 0.02]
+	const objectActions = [
+						   {object: 'camera_origin',
+						   objectAction: {name: 'camera_origin_action', speed: 0.02}
+						   }
+						   ];
+	
+	const acNames = [
+			   'camera_origin_action'
 			   ];
 	
 	const actions = new Array();
 	
 	for (let i = 0; i < acNames.length; i++) {
-		actions[acNames[i][0]] = readActionData(acNames[i]);
+		actions[acNames[i]] = readActionData(acNames[i]);
 	}
+	
+	for (var i = 0; i < objectActions.length; i++) {
+		let oa = objectActions[i];
+		let ob = objects[oa.object];
+		let at = ['objectAction', 'materialAction'];
+		for (var j = 0; j < at.length; j++) {
+			if (oa.hasOwnProperty(at[j])) {
+				ob[at[j]] = {};
+				if (oa[at[j]].hasOwnProperty('delay')) {
+					ob[at[j]].animation_count = oa[at[j]].delay;
+				} else {
+					ob[at[j]].animation_count = actions[oa[at[j]].name].frame_start;
+				}
+				ob[at[j]].speed = oa[at[j]].speed;
+				ob[at[j]].forward = true;
+				ob[at[j]].name = oa[at[j]].name;
+				ob[at[j]].play = 1;
+			}
+		}
+	}
+	objects['camera_origin'].objectAction.play = 2;
 	
 	window.addEventListener('keyup', keyUp, false);
 	
@@ -185,7 +212,6 @@ window.onload = function(){
 			} else {
 				mouseUpdate();
 			}
-			//mouseUpdate();
 
             // objects の更新
             actionUpdate();
@@ -275,6 +301,7 @@ window.onload = function(){
 				objects['window'].draw = true;
 				objects['roof_01'].draw = true;
 				objects['outer_03'].draw = true;
+				objects['inner_2nd'].draw = true;
 				objects['inner_3rd'].draw = true;
 				break;
 			case 1:
@@ -286,6 +313,9 @@ window.onload = function(){
 			case 3:
 				objects['outer_03'].draw = false;
 				objects['inner_3rd'].draw = false;
+				break;
+			case 4:
+				objects['inner_2nd'].draw = false;
 				break;
 			default:
 				return;
@@ -309,24 +339,18 @@ window.onload = function(){
         // 全てのリソースを処理する
         for (var i = 0 in objects) {
 			// アクションの更新
-            if (i in actions && actions[i].objectAction.play != 0) {
-				//eText.textContent = i;
-                objects[i].mMatrix0 = evaluateAction(actions[i].objectAction, actions[i].objectAction.animation_count, objects[i].location, objects[i].rotation, objects[i].scale);
+            if (objects[i].hasOwnProperty('objectAction') && objects[i].objectAction.play != 0) {
+                objects[i].mMatrix0 = evaluateAction(actions[objects[i].objectAction.name], objects[i].objectAction.animation_count, objects[i].location, objects[i].rotation, objects[i].scale, objects[i].rotation_mode);
 				
-				actionIncrement(actions[i].objectAction);
+				actionIncrement(objects[i].objectAction, actions[objects[i].objectAction.name]);
             }
 			
-			if (i in actions && typeof(actions[i].materialAction) !== 'undefined' && actions[i].materialAction.play != 0) {
+			if (objects[i].hasOwnProperty('materialAction') && objects[i].materialAction.play != 0) {
 				objects[i].alpha = evaluateMaterialAction(actions[i].materialAction, actions[i].materialAction.animation_count).alpha;
-				//eText.textContent = objects[i].alpha;
-				//actionIncrement(actions[i].materialAction);
 			}
 			// 特例のあるオブジェクト（drone_body or parent=none）
             var mMatrixLocal = m.identity(m.create());
             if (i == 'mambo_body') {
-                //eText.textContent = drone.gMatrix;
-                //mMatrixLocal = drone.gMatrix;
-				//delayCameraUpdate();
                 m.multiply(objects[i].mMatrix0, drone.gMatrix, mMatrixLocal);
 			} else if (i === 'camera_follow') {
 				m.multiply(objects[i].mMatrix0, camera_follow_gMatrix, mMatrixLocal);
@@ -335,49 +359,47 @@ window.onload = function(){
             } else {
                 m.multiply(objects[i].mMatrix0, mMatrixLocal, mMatrixLocal);
             }
-            //m.multiply(objects[i].mMatrix0, mMatrixLocal, mMatrixLocal);
             if (objects[i].parent != 'none') {
-                //objects[i].mMatrix0 = transformationMatrix(objects[i].location, objects[i].rotation, objects[i].scale, objects[i].rotation_mode);
                 var po = objects[objects[i].parent];
 				if (po.dataReady) {
                     m.multiply(po.mMatrix, mMatrixLocal, objects[i].mMatrix);
-                    //m.multiply(po.mMatrix, objects[i].mMatrix0, objects[i].mMatrix);
-                    //objects[i].mMatrix = m.multiply(po.mMatrix, objects[i].mMatrix, objects[i].mMatrix);
-                    //objects[i].mMatrix0 = objects[i].mMatrix;
                 }
             } else {
                 objects[i].mMatrix = mMatrixLocal;
-                //objects[i].mMatrix = objects[i].mMatrix0;
             }
         }
     }
 	
-	function actionIncrement(ac) {
-		if (ac.forward) {
-			ac.animation_count += ac.speed;
+	function actionIncrement(ob, ac) {
+		if (ob.forward) {
+			ob.animation_count += ob.speed;
 		} else {
-			ac.animation_count -= ac.speed;
+			ob.animation_count -= ob.speed;
 		}
-		if (ac.animation_count > ac.frame_end) {
-			if (ac.play == 1) {
-				ac.animation_count = ac.frame_start;
-			} else if (ac.play == 2) {
-				ac.play = 0;
-				ac.animation_count = ac.frame_start;
-			} else if (ac.play == 3) {
-				ac.play = 0;
-				ac.animation_count = ac.frame_end;
+		if (ob.animation_count > ac.frame_end) {
+			if (ob.play == 1) {
+				ob.animation_count = ac.frame_start;
+			} else if (ob.play == 2) {
+				ob.play = 0;
+				ob.animation_count = ac.frame_start;
+				if (ob.nextAction !== undefined) {
+					ob.nextAction();
+					delete ob.nextAction;
+				}
+			} else if (ob.play == 3) {
+				ob.play = 0;
+				ob.animation_count = ac.frame_end;
 			}
 		}
-		if (ac.animation_count < ac.frame_start) {
-			if (ac.play == 1) {
-				ac.animation_count = ac.frame_end;
-			} else if (ac.play == 2) {
-				ac.animation_count = ac.frame_end;
-				ac.play = 0;
-			} else if (ac.play == 3) {
-				ac.play = 0;
-				ac.animation_count = ac.frame_start;
+		if (ob.animation_count < ac.frame_start) {
+			if (ob.play == 1) {
+				ob.animation_count = ac.frame_end;
+			} else if (ob.play == 2) {
+				ob.animation_count = ac.frame_end;
+				ob.play = 0;
+			} else if (ob.play == 3) {
+				ob.play = 0;
+				ob.animation_count = ac.frame_start;
 			}
 		}
 	}
@@ -628,7 +650,8 @@ window.onload = function(){
 			numDataReady += 1;
 			allDataReady = checkAllDataReady();
 		};
-		img.src = './resource/' + i_source + '.png';
+		img.src = './resource/textures/' + i_source + '.png';
+		console.log(i_source);
 	}
 
 	function readObjectData(filePath) { //csvﾌｧｲﾙﾉ相対ﾊﾟｽor絶対ﾊﾟｽ
@@ -636,7 +659,7 @@ window.onload = function(){
 		var norm = new Array();
 		var uv_coord = new Array();
 		var data = new XMLHttpRequest();
-		data.open("GET", './resource/' + filePath + '.dat', true); //true:非同期,false:同期
+		data.open("GET", './resource/objects/' + filePath + '.dat', true); //true:非同期,false:同期
 		data.responseType = 'arraybuffer';
 		data.send(null);
 		
@@ -763,73 +786,55 @@ window.onload = function(){
 			
 		}
 		var Action = function () {}
-		var Actions = function() {}
-		
-		let actions = new Actions();
 		
 		var data = new XMLHttpRequest();
-		data.open("GET", './resource/' + acName[0] + '_action.csv', false); //true:非同期,false:同期
+		data.open("GET", './resource/actions/' + acName + '.csv', false); //true:非同期,false:同期
 		data.send(null);
 		
 		var LF = String.fromCharCode(10); //改行ｺｰﾄﾞ
 		var lines = data.responseText.split(LF);
 		var cl = 0
-		let numAction = lines[cl++]; //number of actions
-		let rM; //rotation mode
-		for (var ia = 0; ia < numAction; ia++) {
-			let aT = lines[cl++]; //action type
-			if (aT === 'object action') {
-				rM = parseInt(lines[cl++]);
-			}
-			let frRange = lines[cl++].split(',');
-			let nB = parseInt(lines[cl++]);
-			let beziers = [];
-			for (var i = 0; i < nB; ++i) {
-				var bz = new Bezier();
-				bz.data_path = lines[cl];
-				bz.array_index = parseInt(lines[cl + 1]);
-				bz.keyframe_points = parseInt(lines[cl + 2]);
-				cl += 3;
-				bz.handles = [];
-				for (var j = 0; j < bz.keyframe_points; ++j) {
-					var point = new Point();
-					point.handle_left = new Co(lines[cl].split(','));
-					point.co = new Co(lines[cl + 1].split(','));
-					point.handle_right = new Co(lines[cl + 2].split(','));
-					bz.handles.push(point);
-					cl += 3;
-				}
-				beziers.push(bz);
-			}
-			
-			var action = new Action();
-			if (aT === 'object action') {
-				action.rotation_mode = rM;
-			}
-			action.frame_start = parseFloat(frRange[0]);
-			action.frame_end = parseFloat(frRange[1]);
-			action.numCurve = nB;
-			action.curves = beziers;
-			
-			if (acName[2]) {
-				action.animation_count = acName[2];
-			} else {
-				//action.animation_count = -1;
-				action.animation_count = action.frame_start
-			}
-			action.speed = acName[1];
-			action.play = 1; //0: stop, 1: play loop, 2: play once (return to first frame), 3: play once (stay at last frame)
-			action.forward = true;
-			
-			if (aT === 'object action') {
-				actions.objectAction = action;
-			} else if (aT === 'material action') {
-				actions.materialAction = action;
-			}
-		}
-		//console.log(actions);
 		
-		return actions;
+		let aT = lines[cl++]; //action type
+		
+		let frRange = lines[cl++].split(',');
+		let nB = parseInt(lines[cl++]);
+		let beziers = [];
+		for (var i = 0; i < nB; ++i) {
+			var bz = new Bezier();
+			bz.data_path = lines[cl];
+			bz.array_index = parseInt(lines[cl + 1]);
+			bz.keyframe_points = parseInt(lines[cl + 2]);
+			cl += 3;
+			bz.handles = [];
+			for (var j = 0; j < bz.keyframe_points; ++j) {
+				var point = new Point();
+				point.handle_left = new Co(lines[cl].split(','));
+				point.co = new Co(lines[cl + 1].split(','));
+				point.handle_right = new Co(lines[cl + 2].split(','));
+				bz.handles.push(point);
+				cl += 3;
+			}
+			beziers.push(bz);
+		}
+		
+		var action = new Action();
+		
+		action.frame_start = parseFloat(frRange[0]);
+		action.frame_end = parseFloat(frRange[1]);
+		action.numCurve = nB;
+		action.curves = beziers;
+	
+		if (aT === 'object action') {
+			action.type = 0;
+		} else if (aT === 'material action') {
+			action.type = 1;
+		}
+	
+		action.play = 1; //0: stop, 1: play loop, 2: play once (return to first frame), 3: play once (stay at last frame)
+		action.forward = true;
+		
+		return action;
 	}
 
 	function readParentList() {
@@ -848,7 +853,7 @@ window.onload = function(){
 		return pList;
 	}
 	
-	function evaluateAction(_action, _x, _loc, _rot, _scale) {
+	function evaluateAction(_action, _x, _loc, _rot, _scale, _rotation_mode) {
 		let locVec = _loc.slice();
 		let rotVec = _rot.slice();
 		let scVec = _scale.slice();
@@ -865,7 +870,7 @@ window.onload = function(){
 			}
 		}
 		
-		return transformationMatrix(locVec, rotVec, scVec, _action.rotation_mode);
+		return transformationMatrix(locVec, rotVec, scVec, _rotation_mode);
 	}
 	
 	function evaluateMaterialAction(_action, _x) {
