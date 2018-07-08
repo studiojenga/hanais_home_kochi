@@ -1,6 +1,7 @@
 camera,camera_origin
 camera_origin,none
-outer,none
+outer_01,none
+outer_02,none
 outer_03,none
 roof_01,none
 window,none

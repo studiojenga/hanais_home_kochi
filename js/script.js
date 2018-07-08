@@ -79,7 +79,8 @@ window.onload = function(){
 	m.translate(vpoMatrix, [0, 0, -20], vpoMatrix);
 
     const obNames = [
-					 'outer',
+					 'outer_01',
+					 'outer_02',
 					 'outer_03',
 					 'inner_1st',
 					 'inner_2nd',
@@ -300,6 +301,7 @@ window.onload = function(){
 			case 0:
 				objects['window'].draw = true;
 				objects['roof_01'].draw = true;
+				objects['outer_02'].draw = true;
 				objects['outer_03'].draw = true;
 				objects['inner_2nd'].draw = true;
 				objects['inner_3rd'].draw = true;
@@ -315,6 +317,7 @@ window.onload = function(){
 				objects['inner_3rd'].draw = false;
 				break;
 			case 4:
+				objects['outer_02'].draw = false;
 				objects['inner_2nd'].draw = false;
 				break;
 			default:
