@@ -17,8 +17,8 @@ window.onload = function(){
 	let currentTouchLocations;
 	
 	let cameraVertAngle = 0.0;
-	const cameraVertAngleMax = 10.0 * Math.PI / 180.0;
-	const cameraVertAngleMin = -70.0 * Math.PI / 180.0;
+	const cameraVertAngleMax = 20.0 * Math.PI / 180.0;
+	const cameraVertAngleMin = -75.0 * Math.PI / 180.0;
 
 	console.log(navigator.userAgent);
 	let browser;
