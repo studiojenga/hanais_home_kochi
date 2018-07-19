@@ -2,9 +2,11 @@
 window.onload = function(){
     // constant
 	const numDrawMode = 5;
+	const FPS = 60;
+	const OPENING_LENGTH = 3000;
 	
     // variables
-	let FPS;
+	//let FPS;
 	let drawMode = 0;//0: draw all, 1: omit window, 2: omit window and roof
 	let eText = document.getElementById('text');
 	
@@ -15,6 +17,8 @@ window.onload = function(){
 	let touched = false;
 	let prevTouchLocations;
 	let currentTouchLocations;
+	
+	let opening_count = 0;
 	
 	let cameraVertAngle = 0.0;
 	const cameraVertAngleMax = 20.0 * Math.PI / 180.0;
@@ -139,9 +143,11 @@ window.onload = function(){
 	}
 	
 	const objectActions = [
+						   
 						   {object: 'camera_origin',
 						   objectAction: {name: 'camera_origin_action', speed: 0.02}
 						   }
+							
 						   ];
 	
 	const acNames = [
@@ -205,7 +211,11 @@ window.onload = function(){
 
         if (allDataReady === true) {
 			// 全てのリソースのロードが完了している
-			
+			/*
+			if (opening_count < OPENING_LENGTH) {
+				openingUpdate();
+			}
+			*/
 			drawUpdate();
 			
 			if (supportTouch) {
@@ -248,6 +258,20 @@ window.onload = function(){
 
         gl.flush();
     }
+	
+	function openingUpdate() {
+		if (opening_count === 0) {
+			objects[obCamera[camMode]].angle_y = 1.2;
+			let rMatrix = m.identity(m.create());
+			m.rotate(rMatrix, 0.3, [1, 0, 0], rMatrix);
+			m.multiply(rMatrix, objects['camera'].mMatrix0, objects['camera'].mMatrix0);
+		}
+		if (opening_count < 600) {
+			m.rotate(objects['camera_origin'].mMatrix0, 0.1 * 2.0 * Math.PI / 60.0, [0, 0, 1], objects['camera_origin'].mMatrix0);
+		}
+		opening_count += 1;
+	
+	}
 	
 	function mouseUpdate() {
 		if (mousePressed) {
