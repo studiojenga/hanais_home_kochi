@@ -3,7 +3,7 @@ window.onload = function(){
     // constant
 	const numDrawMode = 5;
 	const FPS = 60;
-	const OPENING_LENGTH = 3000;
+	const OPENING_LENGTH = 6000;
 	
     // variables
 	//let FPS;
@@ -83,16 +83,16 @@ window.onload = function(){
 	m.translate(vpoMatrix, [0, 0, -20], vpoMatrix);
 
     const obNames = [
-					 'outer_01',
-					 'outer_02',
-					 'outer_03',
+					 'ground',
 					 'inner_1st',
+					 'outer_01',
 					 'inner_2nd',
+					 'outer_02',
 					 'inner_3rd',
+					 'outer_03',
 					 'roof_01',
 					 'window',
 					 //'wood',
-					 'ground',
 					 
 					 'camera',
 					 'camera_origin'
@@ -143,15 +143,19 @@ window.onload = function(){
 	}
 	
 	const objectActions = [
-						   
+						   /*
 						   {object: 'camera_origin',
 						   objectAction: {name: 'camera_origin_action', speed: 0.02}
 						   }
-							
+							*/
+						   {object: 'camera_origin',
+						   objectAction: {name: 'camera_origin_02_action', speed: 0.04}
+						   }
 						   ];
 	
 	const acNames = [
-			   'camera_origin_action'
+			   'camera_origin_action',
+				'camera_origin_02_action'
 			   ];
 	
 	const actions = new Array();
@@ -211,12 +215,12 @@ window.onload = function(){
 
         if (allDataReady === true) {
 			// 全てのリソースのロードが完了している
-			/*
+			
 			if (opening_count < OPENING_LENGTH) {
 				openingUpdate();
 			}
-			*/
-			drawUpdate();
+			
+			//drawUpdate();
 			
 			if (supportTouch) {
 				touchUpdate();
@@ -260,15 +264,57 @@ window.onload = function(){
     }
 	
 	function openingUpdate() {
-		if (opening_count === 0) {
-			objects[obCamera[camMode]].angle_y = 1.2;
-			let rMatrix = m.identity(m.create());
-			m.rotate(rMatrix, 0.3, [1, 0, 0], rMatrix);
-			m.multiply(rMatrix, objects['camera'].mMatrix0, objects['camera'].mMatrix0);
+		if (opening_count > 600 && opening_count < 1200) {
+			objects['camera'].angle_y -= 40.0 * Math.PI / 180.0 / 600.0;
 		}
-		if (opening_count < 600) {
-			m.rotate(objects['camera_origin'].mMatrix0, 0.1 * 2.0 * Math.PI / 60.0, [0, 0, 1], objects['camera_origin'].mMatrix0);
+		if (opening_count > 1200 && opening_count < 1800) {
+			objects['roof_01'].alpha -= 1.0 / 600.0;
+			objects['window'].alpha -= 1.0 / 600.0;
 		}
+		if (opening_count === 1800) {
+			objects['roof_01'].draw = false;
+			//objects['roof_01'].alpha = 1.0;
+			objects['window'].draw = false;
+			//objects['window'].alpha = 1.0;
+		}
+		if (opening_count > 2400 && opening_count < 3000) {
+			objects['outer_03'].alpha -= 1.0 / 600.0;
+			objects['inner_3rd'].alpha -= 1.0 / 600.0;
+		}
+		if (opening_count === 3000) {
+			objects['outer_03'].draw = false;
+			//objects['outer_03'].alpha = 1.0;
+			objects['inner_3rd'].draw = false;
+			//objects['inner_3rd'].alpha = 1.0;
+		}
+		if (opening_count > 3600 && opening_count < 4200) {
+			objects['outer_02'].alpha -= 1.0 / 600.0;
+			objects['inner_2nd'].alpha -= 1.0 / 600.0;
+		}
+		if (opening_count === 4200) {
+			objects['outer_02'].draw = false;
+			//objects['outer_02'].alpha = 1.0;
+			objects['inner_2nd'].draw = false;
+			//objects['inner_2nd'].alpha = 1.0;
+		}
+		if (opening_count === 4800) {
+			objects['roof_01'].draw = true;
+			objects['window'].draw = true;
+			objects['outer_03'].draw = true;
+			objects['inner_3rd'].draw = true;
+			objects['outer_02'].draw = true;
+			objects['inner_2nd'].draw = true;
+		}
+		if (opening_count > 4800 && opening_count < 5400) {
+			objects['roof_01'].alpha += 1.0 / 600.0;
+			objects['window'].alpha += 1.0 / 600.0;
+			objects['outer_03'].alpha += 1.0 / 600.0;
+			objects['inner_3rd'].alpha += 1.0 / 600.0;
+			objects['outer_02'].alpha += 1.0 / 600.0;
+			objects['inner_2nd'].alpha += 1.0 / 600.0;
+			objects['camera'].angle_y += 20.0 * Math.PI / 180.0 / 600.0;
+		}
+		
 		opening_count += 1;
 	
 	}
@@ -453,7 +499,7 @@ window.onload = function(){
                 //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
                 //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
 
-                gl.uniform1f(uniLocation[4], objects[i].isHit ? 0.0 : 1.0);
+                gl.uniform1f(uniLocation[4], objects[i].alpha);
                 gl.uniform2fv(uniLocation[5], objects[i].texture_shift);
                 gl.uniform1f(uniLocation[9], objects[i].shadow);
                 //m.multiply(vpMatrix, mTempMatrix, mvpMatrix);
@@ -702,6 +748,7 @@ window.onload = function(){
 			ob.type = dv.getInt32(off, true); //0:MESH, 8:CAMERA
 			off += 4;
 			ob.rotation_mode = dv.getInt32(off, true);
+			//console.log(filePath, ob.rotation_mode);
 			off += 4;
 			
 			for (var i = 0; i < 3; i++) {
@@ -896,6 +943,7 @@ window.onload = function(){
 				rotVec[_action.curves[i].array_index] = bezier2D(_action.curves[i].handles, _x);
 			}
 		}
+		eText.textContent = rotVec;
 		
 		return transformationMatrix(locVec, rotVec, scVec, _rotation_mode);
 	}
@@ -930,9 +978,11 @@ window.onload = function(){
 				q.toMatIV(mQtn, rMatrix);
 				break;
 			case 1://XYZ
-				m.rotate(rMatrix, _rot[0], [1, 0, 0], rMatrix);
-				m.rotate(rMatrix, _rot[1], [0, 1, 0], rMatrix);
+				//m.rotate(rMatrix, _rot[0], [1, 0, 0], rMatrix);
+				//m.rotate(rMatrix, _rot[1], [0, 1, 0], rMatrix);
 				m.rotate(rMatrix, _rot[2], [0, 0, 1], rMatrix);
+				m.rotate(rMatrix, _rot[1], [0, 1, 0], rMatrix);
+				m.rotate(rMatrix, _rot[0], [1, 0, 0], rMatrix);
 				break;
 			case 2://XZY
 				m.rotate(rMatrix, _rot[0], [1, 0, 0], rMatrix);
