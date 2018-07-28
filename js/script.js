@@ -3,7 +3,9 @@ window.onload = function(){
     // constant
 	const numDrawMode = 5;
 	const FPS = 60;
-	const OPENING_LENGTH = 6000;
+	const FPS_blender = 24;
+	const OPENING_SPEED = 0.1;
+	const OPENING_LENGTH = 10.0 / OPENING_SPEED * FPS;
 	
     // variables
 	//let FPS;
@@ -13,6 +15,7 @@ window.onload = function(){
 	let mousePressed = false;
 	let prevMouseLocation;
 	let currentMouseLocation;
+	let wheelDelta;
 	
 	let touched = false;
 	let prevTouchLocations;
@@ -21,8 +24,11 @@ window.onload = function(){
 	let opening_count = 0;
 	
 	let cameraVertAngle = 0.0;
-	const cameraVertAngleMax = 20.0 * Math.PI / 180.0;
+	const cameraVertAngleMax = 0.0 * Math.PI / 180.0;
 	const cameraVertAngleMin = -75.0 * Math.PI / 180.0;
+	
+	let cameraOriginZSpeed;
+	let cameraOriginZDest;
 
 	console.log(navigator.userAgent);
 	let browser;
@@ -149,7 +155,7 @@ window.onload = function(){
 						   }
 							*/
 						   {object: 'camera_origin',
-						   objectAction: {name: 'camera_origin_02_action', speed: 0.04}
+						   objectAction: {name: 'camera_origin_02_action', speed: OPENING_SPEED * FPS_blender / FPS}
 						   }
 						   ];
 	
@@ -221,7 +227,6 @@ window.onload = function(){
 			}
 			
 			//drawUpdate();
-			
 			if (supportTouch) {
 				touchUpdate();
 			} else {
@@ -230,6 +235,8 @@ window.onload = function(){
 
             // objects の更新
             actionUpdate();
+			
+			manualUpdate();
 			
 			// HUD の更新
 			HUDUpdate();
@@ -264,40 +271,35 @@ window.onload = function(){
     }
 	
 	function openingUpdate() {
-		if (opening_count > 600 && opening_count < 1200) {
-			objects['camera'].angle_y -= 40.0 * Math.PI / 180.0 / 600.0;
+		let speed_amp = FPS / OPENING_SPEED;
+		if (opening_count > 1.0 * speed_amp && opening_count < 2.0 * speed_amp) {
+			objects['camera'].angle_y -= 40.0 * Math.PI / 180.0 / speed_amp;
 		}
-		if (opening_count > 1200 && opening_count < 1800) {
-			objects['roof_01'].alpha -= 1.0 / 600.0;
-			objects['window'].alpha -= 1.0 / 600.0;
+		if (opening_count > 2.0 * speed_amp && opening_count < 3.0 * speed_amp) {
+			objects['roof_01'].alpha -= 1.0 / speed_amp;
+			objects['window'].alpha -= 1.0 / speed_amp;
 		}
-		if (opening_count === 1800) {
+		if (opening_count >= 3.0 * speed_amp && objects['roof_01'].draw) {
 			objects['roof_01'].draw = false;
-			//objects['roof_01'].alpha = 1.0;
 			objects['window'].draw = false;
-			//objects['window'].alpha = 1.0;
 		}
-		if (opening_count > 2400 && opening_count < 3000) {
-			objects['outer_03'].alpha -= 1.0 / 600.0;
-			objects['inner_3rd'].alpha -= 1.0 / 600.0;
+		if (opening_count > 4.0 * speed_amp && opening_count < 5.0 * speed_amp) {
+			objects['outer_03'].alpha -= 1.0 / speed_amp;
+			objects['inner_3rd'].alpha -= 1.0 / speed_amp;
 		}
-		if (opening_count === 3000) {
+		if (opening_count >= 5.0 * speed_amp && objects['outer_03'].draw) {
 			objects['outer_03'].draw = false;
-			//objects['outer_03'].alpha = 1.0;
 			objects['inner_3rd'].draw = false;
-			//objects['inner_3rd'].alpha = 1.0;
 		}
-		if (opening_count > 3600 && opening_count < 4200) {
-			objects['outer_02'].alpha -= 1.0 / 600.0;
-			objects['inner_2nd'].alpha -= 1.0 / 600.0;
+		if (opening_count > 6.0 * speed_amp && opening_count < 7.0 * speed_amp) {
+			objects['outer_02'].alpha -= 1.0 / speed_amp;
+			objects['inner_2nd'].alpha -= 1.0 / speed_amp;
 		}
-		if (opening_count === 4200) {
+		if (opening_count >= 7.0 * speed_amp && objects['outer_02'].draw) {
 			objects['outer_02'].draw = false;
-			//objects['outer_02'].alpha = 1.0;
 			objects['inner_2nd'].draw = false;
-			//objects['inner_2nd'].alpha = 1.0;
 		}
-		if (opening_count === 4800) {
+		if (opening_count >= 8.0 * speed_amp && !objects['roof_01'].draw) {
 			objects['roof_01'].draw = true;
 			objects['window'].draw = true;
 			objects['outer_03'].draw = true;
@@ -305,14 +307,14 @@ window.onload = function(){
 			objects['outer_02'].draw = true;
 			objects['inner_2nd'].draw = true;
 		}
-		if (opening_count > 4800 && opening_count < 5400) {
-			objects['roof_01'].alpha += 1.0 / 600.0;
-			objects['window'].alpha += 1.0 / 600.0;
-			objects['outer_03'].alpha += 1.0 / 600.0;
-			objects['inner_3rd'].alpha += 1.0 / 600.0;
-			objects['outer_02'].alpha += 1.0 / 600.0;
-			objects['inner_2nd'].alpha += 1.0 / 600.0;
-			objects['camera'].angle_y += 20.0 * Math.PI / 180.0 / 600.0;
+		if (opening_count > 8.0 * speed_amp && opening_count < 9.0 * speed_amp) {
+			objects['roof_01'].alpha += 1.0 / speed_amp;
+			objects['window'].alpha += 1.0 / speed_amp;
+			objects['outer_03'].alpha += 1.0 / speed_amp;
+			objects['inner_3rd'].alpha += 1.0 / speed_amp;
+			objects['outer_02'].alpha += 1.0 / speed_amp;
+			objects['inner_2nd'].alpha += 1.0 / speed_amp;
+			objects['camera'].angle_y += 40.0 * Math.PI / 180.0 / speed_amp;
 		}
 		
 		opening_count += 1;
@@ -346,7 +348,7 @@ window.onload = function(){
 				
 				let ay = objects[obCamera[camMode]].angle_y;
 				ay -= 0.001 * (currentDist - prevDist);
-				if (ay < 0.8 && ay > 0.3) {
+				if (ay < 1.2 && ay > 0.3) {
 					objects[obCamera[camMode]].angle_y = ay;
 				}
 				prevTouchLocations = currentTouchLocations;
@@ -375,24 +377,37 @@ window.onload = function(){
 				objects['outer_03'].draw = true;
 				objects['inner_2nd'].draw = true;
 				objects['inner_3rd'].draw = true;
+				//objects['camera_origin'].mMatrix0[14] = 4.5;
+				cameraOriginZDest = 4.5;
+				cameraOriginZSpeed = (4.5 - objects['camera_origin'].mMatrix0[14]) / (0.3 * FPS);
 				break;
 			case 1:
 				objects['window'].draw = false;
 				break;
 			case 2:
 				objects['roof_01'].draw = false;
+				//objects['camera_origin'].mMatrix0[14] = 7.9;
+				cameraOriginZDest = 7.9;
+				cameraOriginZSpeed = (7.9 - objects['camera_origin'].mMatrix0[14]) / (0.3 * FPS);
 				break;
 			case 3:
 				objects['outer_03'].draw = false;
 				objects['inner_3rd'].draw = false;
+				//objects['camera_origin'].mMatrix0[14] = 4.4;
+				cameraOriginZDest = 4.4;
+				cameraOriginZSpeed = (4.4 - objects['camera_origin'].mMatrix0[14]) / (0.3 * FPS);
 				break;
 			case 4:
 				objects['outer_02'].draw = false;
 				objects['inner_2nd'].draw = false;
+				//objects['camera_origin'].mMatrix0[14] = 2.1;
+				cameraOriginZDest = 2.1;
+				cameraOriginZSpeed = (2.1 - objects['camera_origin'].mMatrix0[14]) / (0.3 * FPS);
 				break;
 			default:
 				return;
 		}
+		
 	}
 
     // camera update
@@ -442,6 +457,12 @@ window.onload = function(){
             }
         }
     }
+	
+	function manualUpdate() {
+		if (Math.abs(cameraOriginZDest - objects['camera_origin'].mMatrix0[14]) > 0.01) {
+			objects['camera_origin'].mMatrix0[14] += cameraOriginZSpeed;
+		}
+	}
 	
 	function actionIncrement(ob, ac) {
 		if (ob.forward) {
@@ -943,7 +964,6 @@ window.onload = function(){
 				rotVec[_action.curves[i].array_index] = bezier2D(_action.curves[i].handles, _x);
 			}
 		}
-		eText.textContent = rotVec;
 		
 		return transformationMatrix(locVec, rotVec, scVec, _rotation_mode);
 	}
@@ -1068,59 +1088,79 @@ window.onload = function(){
 	}
 	
 	function mouseDown(e) {
-		mousePressed = true;
-		prevMouseLocation = getMouseLocation(e);
-		currentMouseLocation = prevMouseLocation;
-		if (prevMouseLocation.x > c.width * 0.9 && prevMouseLocation.y > c.height * 0.9) {
-			drawMode += 1;
-			drawMode %= numDrawMode;
+		if (opening_count >= OPENING_LENGTH ) {
+			mousePressed = true;
+			prevMouseLocation = getMouseLocation(e);
+			currentMouseLocation = prevMouseLocation;
+			if (prevMouseLocation.x > c.width * 0.9 && prevMouseLocation.y > c.height * 0.9) {
+				drawMode += 1;
+				drawMode %= numDrawMode;
+				drawUpdate();
+			}
 		}
 	}
 	
 	function mouseMove(e) {
-		currentMouseLocation = getMouseLocation(e);
+		if (opening_count >= OPENING_LENGTH) {
+			currentMouseLocation = getMouseLocation(e);
+		}
 	}
 	
 	function mouseUp(e) {
-		mousePressed = false;
+		if (opening_count >= OPENING_LENGTH) {
+			mousePressed = false;
+		}
 	}
 	
 	function wheel(e) {
-		let ay = objects[obCamera[camMode]].angle_y;
-		ay += 0.00005 * e.deltaY;
-		if (ay < 0.8 && ay > 0.3) {
-			objects[obCamera[camMode]].angle_y = ay;
+		if (opening_count >= OPENING_LENGTH) {
+			//wheelDelta = e.deltaY;
+			let ay = objects[obCamera[camMode]].angle_y;
+			ay += 0.00005 * e.deltaY;
+			if (ay < 1.2 && ay > 0.3) {
+				objects[obCamera[camMode]].angle_y = ay;
+			}
+			//eText.textContent = ay;
 		}
 	}
 	
 	function touchStart(e) {
-		touched = true;
-		prevTouchLocations = getTouchLocations(e);
-		currentTouchLocations = prevTouchLocations;
-		if (prevTouchLocations.length === 1) {
-			if (prevTouchLocations[0].x > c.width * 0.9 && prevTouchLocations[0].y > c.height * 0.9) {
-				drawMode += 1;
-				drawMode %= numDrawMode;
+		if (opening_count >= OPENING_LENGTH) {
+			touched = true;
+			prevTouchLocations = getTouchLocations(e);
+			currentTouchLocations = prevTouchLocations;
+			if (prevTouchLocations.length === 1) {
+				if (prevTouchLocations[0].x > c.width * 0.9 && prevTouchLocations[0].y > c.height * 0.9) {
+					drawMode += 1;
+					drawMode %= numDrawMode;
+					drawUpdate();
+				}
 			}
+			e.preventDefault();
 		}
-		e.preventDefault();
 	}
 	
 	function touchMove(e) {
-		currentTouchLocations = getTouchLocations(e);
-		eText.textContent = currentTouchLocations.length;
-		e.preventDefault();
+		if (opening_count >= OPENING_LENGTH) {
+			currentTouchLocations = getTouchLocations(e);
+			eText.textContent = currentTouchLocations.length;
+			e.preventDefault();
+		}
+		
 	}
 	
 	function touchEnd(e) {
-		touched = false;
-		e.preventDefault();
+		if (opening_count >= OPENING_LENGTH) {
+			touched = false;
+			e.preventDefault();
+		}
 	}
 	
 	function keyUp(e) {
-		if (e.keyCode === 87) {//w key
+		if (e.keyCode === 87 && opening_count >= OPENING_LENGTH) {//w key
 			drawMode += 1;
 			drawMode %= numDrawMode;
+			drawUpdate();
 		}
 	}
 	
