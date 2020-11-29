@@ -6,27 +6,29 @@ window.onload = function(){
 	const FPS_blender = 24;
 	const OPENING_SPEED = 0.1;
 	const OPENING_LENGTH = 10.0 / OPENING_SPEED * FPS;
-	
+	//const OPENING_LENGTH = 1.0 / OPENING_SPEED * FPS;
+
     // variables
 	//let FPS;
 	let drawMode = 0;//0: draw all, 1: omit window, 2: omit window and roof
 	let eText = document.getElementById('text');
-	
+
 	let mousePressed = false;
 	let prevMouseLocation;
 	let currentMouseLocation;
-	let wheelDelta;
-	
+	let wheelDelta = 0.00005;
+
 	let touched = false;
 	let prevTouchLocations;
 	let currentTouchLocations;
-	
+
 	let opening_count = 0;
-	
+	//let opening_count = OPENING_LENGTH * 0.9;
+
 	let cameraVertAngle = 0.0;
 	const cameraVertAngleMax = 0.0 * Math.PI / 180.0;
 	const cameraVertAngleMin = -75.0 * Math.PI / 180.0;
-	
+
 	let cameraOriginZSpeed;
 	let cameraOriginZDest;
 
@@ -34,11 +36,14 @@ window.onload = function(){
 	let browser;
 	if (navigator.userAgent.indexOf('Chrome') != -1) {
 		browser = 'Chrome';
+	} else if (navigator.userAgent.indexOf('Firefox') != -1) {
+		browser = 'Firefox';
+		wheelDelta = 0.005;
 	} else if (navigator.userAgent.indexOf('Safari')) {
 		browser = 'Safari';
 	}
 	console.log(browser);
-	
+
     // canvasエレメントを取得
     let c = document.getElementById('canvas');
     //c.width = 900;
@@ -84,7 +89,7 @@ window.onload = function(){
 	let vTempMatrix = m.identity(m.create());
 
 	let q = new qtnIV();
-	
+
 	m.ortho(0.0, 0.02 * c.width, 0.02 * c.height, 0.0, 0.1, 300, vpoMatrix);
 	m.translate(vpoMatrix, [0, 0, -20], vpoMatrix);
 
@@ -99,55 +104,55 @@ window.onload = function(){
 					 'roof_01',
 					 'window',
 					 //'wood',
-					 
+
 					 'camera',
 					 'camera_origin'
 					 ];
-	
+
 	const obCamera = [
 				'camera'
 				];
-	
+
 	const obLoading = [];
-	
+
 	const obResp = [];
 	const obHUD = [];
 	let objects = new Array();
 	let Object = function (name) {
 		this.name = name;
 	}
-	
+
 	let allDataReady = false;
 	let numDataReady = 0;
-	
+
 	const parentList = readParentList();
 
 	for (let i = 0; i < obNames.length; i++) {
 		const ob = new Object(obNames[i]);
-		
+
 		ob.texture = new Array();
-		
+
 		ob.dataReady = false;
-		
+
 		ob.parent = parentList[ob.name];
-		
+
 		ob.draw = true;
-		
+
 		ob.texture_shift = [0.0, 0.0];
-		
+
 		ob.alpha = 1.0;
-		
+
         ob.isHit = false;
 
         ob.shadow = 0.0;
 
         objects[ob.name] = ob;
 	}
-	
+
 	for (let i in objects) {
 		readObjectData(objects[i].name);
 	}
-	
+
 	const objectActions = [
 						   /*
 						   {object: 'camera_origin',
@@ -158,18 +163,18 @@ window.onload = function(){
 						   objectAction: {name: 'camera_origin_02_action', speed: OPENING_SPEED * FPS_blender / FPS}
 						   }
 						   ];
-	
+
 	const acNames = [
 			   'camera_origin_action',
 				'camera_origin_02_action'
 			   ];
-	
+
 	const actions = new Array();
-	
+
 	for (let i = 0; i < acNames.length; i++) {
 		actions[acNames[i]] = readActionData(acNames[i]);
 	}
-	
+
 	for (var i = 0; i < objectActions.length; i++) {
 		let oa = objectActions[i];
 		let ob = objects[oa.object];
@@ -190,9 +195,9 @@ window.onload = function(){
 		}
 	}
 	objects['camera_origin'].objectAction.play = 2;
-	
+
 	window.addEventListener('keyup', keyUp, false);
-	
+
 	let supportTouch = 'ontouchend' in document;
 	if (supportTouch) {
 		c.addEventListener('touchstart', touchStart, false);
@@ -204,9 +209,9 @@ window.onload = function(){
 		c.addEventListener('mouseup', mouseUp, false);
 		c.addEventListener('wheel', wheel, false);
 	}
-	
+
 	render();
-	
+
     function render(){
 		//gl.clearColor(1.0, 1.0, 0.9, 1.0);
 		/*
@@ -221,11 +226,11 @@ window.onload = function(){
 
         if (allDataReady === true) {
 			// 全てのリソースのロードが完了している
-			
+
 			if (opening_count < OPENING_LENGTH) {
 				openingUpdate();
 			}
-			
+
 			//drawUpdate();
 			if (supportTouch) {
 				touchUpdate();
@@ -233,21 +238,21 @@ window.onload = function(){
 				mouseUpdate();
 			}
 
-            // objects の更新
-            actionUpdate();
-			
+      // objects の更新
+      actionUpdate();
+
 			manualUpdate();
-			
+
 			// HUD の更新
 			HUDUpdate();
-			
+
 			gl.enable(gl.DEPTH_TEST);
 			gl.enable(gl.CULL_FACE);
 			gl.enable(gl.BLEND);
 			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-			
+
 			cameraUpdate();
-			
+
 			// canvasを初期化
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             gl.viewport(0, 0, c.width, c.height);
@@ -256,7 +261,7 @@ window.onload = function(){
             objectRender();
             // hud 関連
             HUDRender();
-			
+
         }else{
             // canvasを初期化
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -269,7 +274,7 @@ window.onload = function(){
 
         gl.flush();
     }
-	
+
 	function openingUpdate() {
 		let speed_amp = FPS / OPENING_SPEED;
 		if (opening_count > 1.0 * speed_amp && opening_count < 2.0 * speed_amp) {
@@ -316,21 +321,21 @@ window.onload = function(){
 			objects['inner_2nd'].alpha += 1.0 / speed_amp;
 			objects['camera'].angle_y += 40.0 * Math.PI / 180.0 / speed_amp;
 		}
-		
+
 		opening_count += 1;
-	
+
 	}
-	
+
 	function mouseUpdate() {
 		if (mousePressed) {
 			let deltaX = currentMouseLocation.x - prevMouseLocation.x;
 			let deltaY = currentMouseLocation.y - prevMouseLocation.y;
 			cameraInteractionUpdate(deltaX, deltaY);
-			
+
 			prevMouseLocation = currentMouseLocation;
 		}
 	}
-	
+
 	function touchUpdate() {
 		if (touched) {
 			if (currentTouchLocations.length === 1) {//rotation
@@ -345,7 +350,7 @@ window.onload = function(){
 				let pt0 = prevTouchLocations[0];
 				let pt1 = prevTouchLocations[1];
 				let prevDist = Math.sqrt((pt1.x - pt0.x) * (pt1.x - pt0.x) + (pt1.y - pt0.y) * (pt1.y - pt0.y));
-				
+
 				let ay = objects[obCamera[camMode]].angle_y;
 				ay -= 0.001 * (currentDist - prevDist);
 				if (ay < 1.2 && ay > 0.3) {
@@ -355,10 +360,10 @@ window.onload = function(){
 			}
 		}
 	}
-	
+
 	function cameraInteractionUpdate(dX, dY) {
 		m.rotate(objects['camera_origin'].mMatrix0, -0.005 * dX, [0, 0, 1], objects['camera_origin'].mMatrix0);
-		
+
 		let deltaRotY = -0.005 * dY;
 		if (cameraVertAngle + deltaRotY < cameraVertAngleMax && cameraVertAngle + deltaRotY > cameraVertAngleMin) {
 			let rMatrix = m.identity(m.create());
@@ -367,7 +372,7 @@ window.onload = function(){
 			cameraVertAngle += deltaRotY;
 		}
 	}
-	
+
 	function drawUpdate() {
 		switch (drawMode) {
 			case 0:
@@ -407,7 +412,7 @@ window.onload = function(){
 			default:
 				return;
 		}
-		
+
 	}
 
     // camera update
@@ -429,10 +434,10 @@ window.onload = function(){
 			// アクションの更新
             if (objects[i].hasOwnProperty('objectAction') && objects[i].objectAction.play != 0) {
                 objects[i].mMatrix0 = evaluateAction(actions[objects[i].objectAction.name], objects[i].objectAction.animation_count, objects[i].location, objects[i].rotation, objects[i].scale, objects[i].rotation_mode);
-				
+
 				actionIncrement(objects[i].objectAction, actions[objects[i].objectAction.name]);
             }
-			
+
 			if (objects[i].hasOwnProperty('materialAction') && objects[i].materialAction.play != 0) {
 				objects[i].alpha = evaluateMaterialAction(actions[i].materialAction, actions[i].materialAction.animation_count).alpha;
 			}
@@ -457,13 +462,13 @@ window.onload = function(){
             }
         }
     }
-	
+
 	function manualUpdate() {
 		if (Math.abs(cameraOriginZDest - objects['camera_origin'].mMatrix0[14]) > 0.01) {
 			objects['camera_origin'].mMatrix0[14] += cameraOriginZSpeed;
 		}
 	}
-	
+
 	function actionIncrement(ob, ac) {
 		if (ob.forward) {
 			ob.animation_count += ob.speed;
@@ -545,7 +550,7 @@ window.onload = function(){
 				//console.log(i, obHUD[i]);
 				set_attribute(objects[obHUD[i]].VBOList, attLocation, attStride);
 				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, objects[obHUD[i]].iIndex);
-				
+
 				if (objects[obHUD[i]].down) {
 					gl.bindTexture(gl.TEXTURE_2D, objects[obHUD[i]].texture[obHUD[i] + '_down']);
 				} else {
@@ -556,18 +561,18 @@ window.onload = function(){
 				//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-				
+
 				// uniform変数にテクスチャを登録
 				//gl.uniform1f(uniLocation[7], 1.0);
 				//gl.uniform1f(uniLocation[5], objects[obHUD[i]].texture_shift);
 				gl.uniform2fv(uniLocation[5], objects[obHUD[i]].texture_shift);
-				
+
 				m.multiply(vpoMatrix, objects[obHUD[i]].mMatrix, mvpMatrix);
 				gl.uniformMatrix4fv(uniLocation[1], false, mvpMatrix);
 				gl.uniformMatrix4fv(uniLocation[2], false, invMatrix);
 				//gl.uniform1f(uniLocation[4], 1.0);
 				gl.uniform1f(uniLocation[4], objects[obHUD[i]].alpha);
-				
+
 				gl.drawElements(gl.TRIANGLES, objects[obHUD[i]].numLoop, gl.UNSIGNED_SHORT, 0);
 			}
         }
@@ -611,21 +616,21 @@ window.onload = function(){
     function create_shader(id){
         // シェーダを格納する変数
         var shader;
-        
+
         // HTMLからscriptタグへの参照を取得
         var scriptElement = document.getElementById(id);
-        
+
         // scriptタグが存在しない場合は抜ける
         if(!scriptElement){return;}
-        
+
         // scriptタグのtype属性をチェック
         switch(scriptElement.type){
-				
+
 				// 頂点シェーダの場合
             case 'x-shader/x-vertex':
                 shader = gl.createShader(gl.VERTEX_SHADER);
                 break;
-                
+
 				// フラグメントシェーダの場合
             case 'x-shader/x-fragment':
                 shader = gl.createShader(gl.FRAGMENT_SHADER);
@@ -633,70 +638,70 @@ window.onload = function(){
             default :
                 return;
         }
-        
+
         // 生成されたシェーダにソースを割り当てる
         gl.shaderSource(shader, scriptElement.text);
-        
+
         // シェーダをコンパイルする
         gl.compileShader(shader);
-        
+
         // シェーダが正しくコンパイルされたかチェック
         if(gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
-            
+
             // 成功していたらシェーダを返して終了
             return shader;
         }else{
-            
+
             // 失敗していたらエラーログをアラートする
             alert(gl.getShaderInfoLog(shader));
         }
     }
-    
+
     // プログラムオブジェクトを生成しシェーダをリンクする関数
     function create_program(vs, fs){
         // プログラムオブジェクトの生成
         var program = gl.createProgram();
-        
+
         // プログラムオブジェクトにシェーダを割り当てる
         gl.attachShader(program, vs);
         gl.attachShader(program, fs);
-        
+
         // シェーダをリンク
         gl.linkProgram(program);
-        
+
         // シェーダのリンクが正しく行なわれたかチェック
         if(gl.getProgramParameter(program, gl.LINK_STATUS)){
-			
+
             // 成功していたらプログラムオブジェクトを有効にする
             gl.useProgram(program);
-            
+
             // プログラムオブジェクトを返して終了
             return program;
         }else{
-            
+
             // 失敗していたらエラーログをアラートする
             alert(gl.getProgramInfoLog(program));
         }
     }
-    
+
     // VBOを生成する関数
     function create_vbo(data){
         // バッファオブジェクトの生成
         var vbo = gl.createBuffer();
-        
+
         // バッファをバインドする
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        
+
         // バッファにデータをセット
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
-        
+
         // バッファのバインドを無効化
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        
+
         // 生成した VBO を返して終了
         return vbo;
     }
-    
+
     // VBOをバインドし登録する関数
     function set_attribute(vbo, attL, attS){
         // 引数として受け取った配列を処理する
@@ -704,30 +709,30 @@ window.onload = function(){
 			//console.log(i);
             // バッファをバインドする
             gl.bindBuffer(gl.ARRAY_BUFFER, vbo[i]);
-            
+
             // attributeLocationを有効にする
             gl.enableVertexAttribArray(attL[i]);
 			//console.log(i, attL[i]);
-            
+
             // attributeLocationを通知し登録する
             gl.vertexAttribPointer(attL[i], attS[i], gl.FLOAT, false, 0, 0);
         }
     }
-    
+
     // IBOを生成する関数
     function create_ibo(data){
         // バッファオブジェクトの生成
         var ibo = gl.createBuffer();
-        
+
         // バッファをバインドする
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-        
+
         // バッファにデータをセット
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(data), gl.STATIC_DRAW);
-        
+
         // バッファのバインドを無効化
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-        
+
         // 生成したIBOを返して終了
         return ibo;
     }
@@ -756,7 +761,7 @@ window.onload = function(){
 		data.open("GET", './resource/objects/' + filePath + '.dat', true); //true:非同期,false:同期
 		data.responseType = 'arraybuffer';
 		data.send(null);
-		
+
 		data.onload = function(e) {
 			var arrayBuffer = data.response;
 			var dv = new DataView(arrayBuffer);
@@ -765,19 +770,19 @@ window.onload = function(){
 			var scale = [];
 			var off = 0;
 			var ob = objects[filePath];
-			
+
 			ob.type = dv.getInt32(off, true); //0:MESH, 8:CAMERA
 			off += 4;
 			ob.rotation_mode = dv.getInt32(off, true);
 			//console.log(filePath, ob.rotation_mode);
 			off += 4;
-			
+
 			for (var i = 0; i < 3; i++) {
 				location.push(dv.getFloat32(off, true));
 				off += 4;
 			}
 			ob.location = location;
-			
+
 			var rotation_comp = 4;
 			if (ob.rotation_mode != 0) {
 				rotation_comp = 3;
@@ -787,7 +792,7 @@ window.onload = function(){
 				off += 4;
 			}
 			ob.rotation = rotation;
-			
+
 			for (var i = 0; i < 3; i++) {
 				scale.push(dv.getFloat32(off, true));
 				off += 4;
@@ -795,35 +800,35 @@ window.onload = function(){
 			ob.scale = scale;
 			ob.mMatrix0 = transformationMatrix(ob.location, ob.rotation, ob.scale, ob.rotation_mode);//Local coordinate
 			ob.mMatrix = transformationMatrix(ob.location, ob.rotation, ob.scale, ob.rotation_mode);//Global coordinate
-			
+
 			if (ob.type == 0) {//object type 'MESH'
 				ob.numLoop = dv.getInt32(off, true);
 				off += 4;
-				
+
 				for	(var i = 0; i < ob.numLoop; ++i) {
 					for (var j = 0; j < 3; ++ j) {
 						coord.push(dv.getFloat32(off, true));
 						off += 4;
 					}
 				}
-				
+
 				for	(var i = 0; i < ob.numLoop; ++i) {
 					for (var j = 0; j < 2; ++ j) {
 						uv_coord.push(dv.getFloat32(off, true));
 						off += 4;
 					}
 				}
-				
+
 				var ind = new Array();
 				for (var ii = 0; ii < ob.numLoop;++ii) {
 					ind.push(ii);
 				}
-				
+
 				var vPosition     = create_vbo(coord);
 				var vTextureCoord = create_vbo(uv_coord);
 				ob.VBOList       = [vPosition, vTextureCoord];
 				ob.iIndex        = create_ibo(ind);
-				
+
 				create_texture(filePath, filePath);
 			} else if (ob.type == 8) {//object type 'CAMERA'
 				console.log(filePath);
@@ -845,17 +850,17 @@ window.onload = function(){
 						break;
 				}
 				ob.pMatrix = _pMatrix;
-				
+
 				//console.log(objects[filePath]);
 			}
-			
+
 			objects[filePath].dataReady = true;
 			numDataReady += 1;
 			allDataReady = checkAllDataReady();
-			
+
 		}
 	}
-	
+
 	function checkAllDataReady() {
 		var ready = true;
 		for (var i = 0 in objects) {
@@ -875,23 +880,23 @@ window.onload = function(){
 			this.y = parseFloat(_co[1]);
 		}
 		var Point = function () {
-			
+
 		}
 		var Bezier = function () {
-			
+
 		}
 		var Action = function () {}
-		
+
 		var data = new XMLHttpRequest();
 		data.open("GET", './resource/actions/' + acName + '.csv', false); //true:非同期,false:同期
 		data.send(null);
-		
+
 		var LF = String.fromCharCode(10); //改行ｺｰﾄﾞ
 		var lines = data.responseText.split(LF);
 		var cl = 0
-		
+
 		let aT = lines[cl++]; //action type
-		
+
 		let frRange = lines[cl++].split(',');
 		let nB = parseInt(lines[cl++]);
 		let beziers = [];
@@ -912,23 +917,23 @@ window.onload = function(){
 			}
 			beziers.push(bz);
 		}
-		
+
 		var action = new Action();
-		
+
 		action.frame_start = parseFloat(frRange[0]);
 		action.frame_end = parseFloat(frRange[1]);
 		action.numCurve = nB;
 		action.curves = beziers;
-	
+
 		if (aT === 'object action') {
 			action.type = 0;
 		} else if (aT === 'material action') {
 			action.type = 1;
 		}
-	
+
 		action.play = 1; //0: stop, 1: play loop, 2: play once (return to first frame), 3: play once (stay at last frame)
 		action.forward = true;
-		
+
 		return action;
 	}
 
@@ -936,7 +941,7 @@ window.onload = function(){
 		var data = new XMLHttpRequest();
 		data.open("GET", './resource/parent_list.csv', false); //true:非同期,false:同期
 		data.send(null);
-		
+
 		var LF = String.fromCharCode(10); //改行ｺｰﾄﾞ
 		var lines = data.responseText.split(LF);
 		var pList = new Array();
@@ -944,15 +949,15 @@ window.onload = function(){
 			var a = lines[i].split(',');
 			pList[a[0]] = a[1];
 		}
-		
+
 		return pList;
 	}
-	
+
 	function evaluateAction(_action, _x, _loc, _rot, _scale, _rotation_mode) {
 		let locVec = _loc.slice();
 		let rotVec = _rot.slice();
 		let scVec = _scale.slice();
-		
+
 		for (var i = 0; i < _action.numCurve; i++) {
 			if (_action.curves[i].data_path == 'location') {
 				locVec[_action.curves[i].array_index] = bezier2D(_action.curves[i].handles, _x);
@@ -964,13 +969,13 @@ window.onload = function(){
 				rotVec[_action.curves[i].array_index] = bezier2D(_action.curves[i].handles, _x);
 			}
 		}
-		
+
 		return transformationMatrix(locVec, rotVec, scVec, _rotation_mode);
 	}
-	
+
 	function evaluateMaterialAction(_action, _x) {
 		let material = function () {
-			
+
 		}
 		for (var i = 0; i < _action.numCurve; i++) {
 			if (_action.curves[i].data_path === 'alpha') {
@@ -979,15 +984,15 @@ window.onload = function(){
 		}
 		return material;
 	}
-	
+
 	function transformationMatrix(_loc, _rot, _scale, _rot_mode) {
 		var mMatrix = m.identity(m.create());
-		
+
 		var mQtn = q.identity(q.create());
 		var rMatrix = m.identity(m.create());
 		var tMatrix = m.identity(m.create());
 		var sMatrix = m.identity(m.create());
-		
+
 		switch (_rot_mode) {
 			case 0:
 				mQtn[0] = _rot[1];
@@ -1030,10 +1035,10 @@ window.onload = function(){
 				m.rotate(rMatrix, _rot[0], [1, 0, 0], rMatrix);
 				break;
 		}
-		
+
 		m.translate(tMatrix, _loc, tMatrix);
 		m.scale(sMatrix, _scale, sMatrix);
-		
+
 		m.multiply(tMatrix, sMatrix, mMatrix);
 		m.multiply(mMatrix, rMatrix, mMatrix);
 		return mMatrix;
@@ -1078,15 +1083,15 @@ window.onload = function(){
 			+ 3.0 * cp[1].y * t * (1.0 - t) * (1.0 - t)
 			+ 3.0 * cp[2].y * t * t * (1.0 - t)
 			+ cp[3].y * t * t * t;
-			
+
 			return y;
 		}
-		
+
 	}
-	
+
 	function HUDUpdate(){
 	}
-	
+
 	function mouseDown(e) {
 		if (opening_count >= OPENING_LENGTH ) {
 			mousePressed = true;
@@ -1099,31 +1104,32 @@ window.onload = function(){
 			}
 		}
 	}
-	
+
 	function mouseMove(e) {
 		if (opening_count >= OPENING_LENGTH) {
 			currentMouseLocation = getMouseLocation(e);
 		}
 	}
-	
+
 	function mouseUp(e) {
 		if (opening_count >= OPENING_LENGTH) {
 			mousePressed = false;
 		}
 	}
-	
+
 	function wheel(e) {
 		if (opening_count >= OPENING_LENGTH) {
 			//wheelDelta = e.deltaY;
 			let ay = objects[obCamera[camMode]].angle_y;
-			ay += 0.00005 * e.deltaY;
-			if (ay < 1.2 && ay > 0.3) {
+			//ay += 0.00005 * e.deltaY;
+			ay += wheelDelta * e.deltaY;
+			if (ay < 1.2 && ay > 0.2) {
 				objects[obCamera[camMode]].angle_y = ay;
 			}
 			//eText.textContent = ay;
 		}
 	}
-	
+
 	function touchStart(e) {
 		if (opening_count >= OPENING_LENGTH) {
 			touched = true;
@@ -1139,23 +1145,23 @@ window.onload = function(){
 			e.preventDefault();
 		}
 	}
-	
+
 	function touchMove(e) {
 		if (opening_count >= OPENING_LENGTH) {
 			currentTouchLocations = getTouchLocations(e);
 			eText.textContent = currentTouchLocations.length;
 			e.preventDefault();
 		}
-		
+
 	}
-	
+
 	function touchEnd(e) {
 		if (opening_count >= OPENING_LENGTH) {
 			touched = false;
 			e.preventDefault();
 		}
 	}
-	
+
 	function keyUp(e) {
 		if (e.keyCode === 87 && opening_count >= OPENING_LENGTH) {//w key
 			drawMode += 1;
@@ -1163,20 +1169,20 @@ window.onload = function(){
 			drawUpdate();
 		}
 	}
-	
+
 	function getMouseLocation(e) {
 		const mouseLocation = {};
-		
+
 		let rect = e.target.getBoundingClientRect();
-		
+
 		mouseLocation.x = e.clientX - rect.left;
 		mouseLocation.y = e.clientY - rect.top;
 		return mouseLocation;
 	}
-	
+
 	function getTouchLocations(e) {
 		const touchLocations = [];
-		
+
 		let rect = e.target.getBoundingClientRect();
 		for (var i = 0; i < e.touches.length; i++) {
 			const touchLocation = {};
